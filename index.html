@@ -60,6 +60,9 @@
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.05); }
         }
+        .roulette-spin {
+            transition: transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
@@ -89,12 +92,29 @@
             
             <div class="flex-1 space-y-4 mb-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
-                    <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Enter your name">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Patient Name</label>
+                    <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Enter patient's full name">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Medicaid ID</label>
-                    <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Enter Medicaid ID">
+                    <div class="flex space-x-2">
+                        <input type="text" id="medicaidInput" class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Enter Medicaid ID">
+                        <button onclick="checkEligibility()" class="bg-blue-500 text-white px-4 py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors">
+                            Verify
+                        </button>
+                    </div>
+                    <div id="eligibilityResult" class="mt-2 hidden">
+                        <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-green-600">✅</span>
+                                <div class="text-sm">
+                                    <p class="font-semibold text-green-800">Eligible - Targeted Adult Medicaid</p>
+                                    <p class="text-green-600">Route: FFS Medicaid (H0038)</p>
+                                    <p class="text-green-600">County: Salt Lake | No PMHP enrollment</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Ethnicity</label>
@@ -316,6 +336,27 @@
                     </div>
                 </div>
 
+                <!-- Drug Tests View -->
+                <div id="tests-view" class="dashboard-view p-6 hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Drug Testing</h2>
+                    
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white mb-6">
+                        <h3 class="text-lg font-semibold mb-2">Daily Test Available</h3>
+                        <p class="mb-4">Complete your saliva test with CPSS guidance</p>
+                        <button onclick="startDrugTest()" class="bg-white text-green-600 px-6 py-3 rounded-lg font-semibold">
+                            🧪 Start Guided Test
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <h3 class="font-semibold">Recent Tests</h3>
+                        <div class="bg-gray-50 rounded-lg p-4 text-center">
+                            <p class="text-gray-600 text-sm">No tests completed yet</p>
+                            <p class="text-gray-500 text-xs mt-1">Complete your first test to earn 15 points!</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- To-Dos View -->
                 <div id="todos-view" class="dashboard-view p-6 hidden">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Today's Activities</h2>
@@ -360,11 +401,11 @@
                     <div class="bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl p-6 text-white mb-6">
                         <div class="flex justify-between items-center mb-4">
                             <span class="text-lg">Total Points</span>
-                            <span class="text-3xl font-bold">10</span>
+                            <span class="text-3xl font-bold points-display">10</span>
                         </div>
                         <div class="text-center">
-                            <button class="bg-white text-teal-600 px-6 py-2 rounded-full font-semibold">
-                                🎰 Spin Roulette
+                            <button onclick="checkRouletteEligibility()" id="rouletteButton" class="bg-white text-teal-600 px-6 py-2 rounded-full font-semibold">
+                                🎰 Need 25 pts to spin
                             </button>
                         </div>
                     </div>
@@ -419,26 +460,30 @@
             </div>
 
             <!-- Footer Navigation -->
-            <div class="bg-white border-t border-gray-200 px-4 py-2">
+            <div class="bg-white border-t border-gray-200 px-2 py-2">
                 <div class="flex justify-around">
-                    <button onclick="showDashboardView('team')" class="dashboard-tab flex flex-col items-center p-2 text-teal-500">
-                        <span class="text-xl mb-1">👥</span>
-                        <span class="text-xs">My Team</span>
+                    <button onclick="showDashboardView('team')" class="dashboard-tab flex flex-col items-center p-1 text-teal-500">
+                        <span class="text-lg mb-1">👥</span>
+                        <span class="text-xs">Team</span>
                     </button>
-                    <button onclick="showDashboardView('therapy')" class="dashboard-tab flex flex-col items-center p-2 text-gray-400">
-                        <span class="text-xl mb-1">💬</span>
+                    <button onclick="showDashboardView('therapy')" class="dashboard-tab flex flex-col items-center p-1 text-gray-400">
+                        <span class="text-lg mb-1">💬</span>
                         <span class="text-xs">Group</span>
                     </button>
-                    <button onclick="showDashboardView('todos')" class="dashboard-tab flex flex-col items-center p-2 text-gray-400">
-                        <span class="text-xl mb-1">📝</span>
-                        <span class="text-xs">To-Dos</span>
+                    <button onclick="showDashboardView('tests')" class="dashboard-tab flex flex-col items-center p-1 text-gray-400">
+                        <span class="text-lg mb-1">🧪</span>
+                        <span class="text-xs">Tests</span>
                     </button>
-                    <button onclick="showDashboardView('wallet')" class="dashboard-tab flex flex-col items-center p-2 text-gray-400">
-                        <span class="text-xl mb-1">💰</span>
+                    <button onclick="showDashboardView('todos')" class="dashboard-tab flex flex-col items-center p-1 text-gray-400">
+                        <span class="text-lg mb-1">📝</span>
+                        <span class="text-xs">To-Do</span>
+                    </button>
+                    <button onclick="showDashboardView('wallet')" class="dashboard-tab flex flex-col items-center p-1 text-gray-400">
+                        <span class="text-lg mb-1">💰</span>
                         <span class="text-xs">Wallet</span>
                     </button>
-                    <button onclick="showDashboardView('profile')" class="dashboard-tab flex flex-col items-center p-2 text-gray-400">
-                        <span class="text-xl mb-1">👤</span>
+                    <button onclick="showDashboardView('profile')" class="dashboard-tab flex flex-col items-center p-1 text-gray-400">
+                        <span class="text-lg mb-1">👤</span>
                         <span class="text-xs">Profile</span>
                     </button>
                 </div>
@@ -447,7 +492,215 @@
 
     </div>
 
+    <!-- Drug Test Simulation Modal -->
+    <div id="drugTestModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="max-w-sm mx-auto bg-white h-full relative">
+            
+            <!-- Video Call Interface -->
+            <div id="videoCall" class="test-step h-full flex flex-col">
+                <div class="bg-black text-white p-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                        <span class="text-sm">Connected with CPSS</span>
+                    </div>
+                    <button onclick="closeDrugTest()" class="text-white">✕</button>
+                </div>
+                
+                <div class="flex-1 bg-gray-900 relative">
+                    <!-- Mock video feed -->
+                    <div class="absolute inset-4 bg-blue-900 rounded-lg flex items-center justify-center">
+                        <div class="text-center text-white">
+                            <div class="w-16 h-16 bg-blue-600 rounded-full mx-auto mb-2 flex items-center justify-center">
+                                <span class="text-2xl">👨‍⚕️</span>
+                            </div>
+                            <p class="text-sm">Zack (CPSS)</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Patient video (small corner) -->
+                    <div class="absolute top-4 right-4 w-20 h-28 bg-teal-700 rounded-lg flex items-center justify-center">
+                        <span class="text-white text-2xl">👤</span>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-white">
+                    <div class="bg-blue-50 p-3 rounded-lg mb-4">
+                        <p class="text-sm text-blue-800">"Hi! I'm here to guide you through your first saliva test. Let's start by showing me the tamper-proof seal on your test kit."</p>
+                    </div>
+                    <button onclick="nextTestStep('seal')" class="w-full bg-teal-500 text-white py-3 rounded-lg font-semibold">
+                        Show Seal & QR Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- QR Code/Seal Step -->
+            <div id="sealStep" class="test-step hidden h-full flex flex-col">
+                <div class="bg-teal-500 text-white p-4 flex items-center justify-between">
+                    <span class="font-semibold">Verify Test Kit</span>
+                    <button onclick="closeDrugTest()" class="text-white">✕</button>
+                </div>
+                
+                <div class="flex-1 p-6 flex flex-col justify-center">
+                    <div class="text-center mb-6">
+                        <div class="w-32 h-32 bg-gray-200 rounded-lg mx-auto mb-4 flex items-center justify-center border-2 border-dashed border-gray-400">
+                            <div class="text-center">
+                                <div class="text-4xl mb-2">📱</div>
+                                <p class="text-xs text-gray-600">QR Code</p>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600">Show the QR code and tamper-proof seal to your camera</p>
+                    </div>
+                    
+                    <div class="bg-green-50 p-3 rounded-lg mb-4">
+                        <p class="text-sm text-green-800">"Perfect! I can see the seal is intact and the QR code confirms this is your assigned test kit. Now let's collect the sample."</p>
+                    </div>
+                </div>
+                
+                <div class="p-4">
+                    <button onclick="nextTestStep('sample')" class="w-full bg-teal-500 text-white py-3 rounded-lg font-semibold">
+                        Collect Sample
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sample Collection Step -->
+            <div id="sampleStep" class="test-step hidden h-full flex flex-col">
+                <div class="bg-teal-500 text-white p-4 flex items-center justify-between">
+                    <span class="font-semibold">Collect Sample</span>
+                    <button onclick="closeDrugTest()" class="text-white">✕</button>
+                </div>
+                
+                <div class="flex-1 p-6 flex flex-col justify-center">
+                    <div class="text-center mb-6">
+                        <div class="text-6xl mb-4">🧪</div>
+                        <h3 class="text-lg font-semibold mb-2">Saliva Collection</h3>
+                        <p class="text-sm text-gray-600">Follow the instructions on your test kit</p>
+                    </div>
+                    
+                    <div class="bg-blue-50 p-3 rounded-lg mb-4">
+                        <p class="text-sm text-blue-800">"Take your time. Fill the collection tube to the line. I'm here if you have any questions!"</p>
+                    </div>
+                </div>
+                
+                <div class="p-4">
+                    <button onclick="nextTestStep('waiting')" class="w-full bg-teal-500 text-white py-3 rounded-lg font-semibold">
+                        Sample Complete
+                    </button>
+                </div>
+            </div>
+
+            <!-- Waiting/Coaching Step -->
+            <div id="waitingStep" class="test-step hidden h-full flex flex-col">
+                <div class="bg-yellow-500 text-white p-4 flex items-center justify-between">
+                    <span class="font-semibold">Processing Results</span>
+                    <button onclick="closeDrugTest()" class="text-white">✕</button>
+                </div>
+                
+                <div class="flex-1 p-6 flex flex-col justify-center">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-yellow-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <div class="animate-spin text-2xl">⏳</div>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Processing...</h3>
+                        <p class="text-sm text-gray-600">Results typically take 2-3 minutes</p>
+                    </div>
+                    
+                    <div class="bg-green-50 p-3 rounded-lg mb-4">
+                        <p class="text-sm text-green-800">"Great job! While we wait, let's do some breathing exercises. Take a deep breath in... and slowly out. You're doing amazing!"</p>
+                    </div>
+                </div>
+                
+                <div class="p-4">
+                    <button onclick="nextTestStep('results')" class="w-full bg-yellow-500 text-white py-3 rounded-lg font-semibold">
+                        Show Results
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Step -->
+            <div id="resultsStep" class="test-step hidden h-full flex flex-col">
+                <div class="bg-green-500 text-white p-4 flex items-center justify-between">
+                    <span class="font-semibold">Test Results</span>
+                    <button onclick="closeDrugTest()" class="text-white">✕</button>
+                </div>
+                
+                <div class="flex-1 p-6 flex flex-col justify-center">
+                    <div class="text-center mb-6">
+                        <div class="text-8xl mb-4">🎉</div>
+                        <h3 class="text-2xl font-bold text-green-600 mb-2">NEGATIVE!</h3>
+                        <p class="text-lg text-gray-600">Congratulations!</p>
+                    </div>
+                    
+                    <div class="bg-green-50 p-4 rounded-lg mb-4">
+                        <p class="text-sm text-green-800 text-center">"AMAZING! Let's celebrate! 🎊 This is fantastic progress!"</p>
+                    </div>
+                    
+                    <div class="points-badge text-white py-3 px-6 rounded-full text-center mb-4">
+                        <span class="font-bold text-lg">+15 Points Earned!</span>
+                    </div>
+                </div>
+                
+                <div class="p-4">
+                    <button onclick="completeDrugTest()" class="w-full bg-green-500 text-white py-3 rounded-lg font-semibold">
+                        Awesome! Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roulette Modal -->
+    <div id="rouletteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="max-w-sm mx-auto bg-white h-full flex flex-col justify-center p-6">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Reward Roulette!</h2>
+                <p class="text-gray-600">You have enough points to spin!</p>
+            </div>
+            
+            <div class="relative mb-8">
+                <!-- Roulette Wheel -->
+                <div id="rouletteWheel" class="w-64 h-64 mx-auto rounded-full border-8 border-gray-300 relative overflow-hidden" style="background: conic-gradient(from 0deg, #ef4444 0deg 60deg, #22c55e 60deg 120deg, #3b82f6 120deg 180deg, #f59e0b 180deg 240deg, #8b5cf6 240deg 300deg, #ec4899 300deg 360deg);">
+                    <!-- Wheel sections with values -->
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="w-4 h-4 bg-white rounded-full"></div>
+                    </div>
+                    <!-- Pointer -->
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1">
+                        <div class="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-gray-800"></div>
+                    </div>
+                </div>
+                
+                <!-- Values around wheel -->
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="relative w-64 h-64">
+                        <div class="absolute top-4 left-1/2 transform -translate-x-1/2 text-white font-bold">$10</div>
+                        <div class="absolute top-12 right-8 text-white font-bold">$30</div>
+                        <div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-white font-bold">$5</div>
+                        <div class="absolute bottom-12 right-8 text-white font-bold">$20</div>
+                        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white font-bold">$15</div>
+                        <div class="absolute bottom-12 left-8 text-white font-bold">$25</div>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="spinRoulette()" id="spinButton" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl text-lg font-bold">
+                🎰 TAP TO SPIN! 🎰
+            </button>
+            
+            <div id="spinResult" class="hidden mt-6 text-center">
+                <div class="text-6xl mb-2">🎊</div>
+                <h3 class="text-3xl font-bold text-green-600 mb-2">YOU WON $30!</h3>
+                <p class="text-gray-600 mb-4">Amazing! Check your rewards wallet</p>
+                <button onclick="closeRoulette()" class="bg-teal-500 text-white px-6 py-3 rounded-lg font-semibold">
+                    Collect Winnings
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        let currentPoints = 10; // Starting points from intake
+        let hasCompletedTest = false;
         // Analytics function
         function logEvent(action, screen) {
             console.log(`[REACH Analytics] ${action} - Screen: ${screen} - Time: ${new Date().toISOString()}`);
@@ -535,6 +788,221 @@
                 logEvent(`BUTTON_CLICK: ${buttonText}`, currentScreen.toUpperCase());
             }
         });
+
+        // Drug test simulation functions
+        function startDrugTest() {
+            document.getElementById('drugTestModal').classList.remove('hidden');
+            document.getElementById('videoCall').classList.remove('hidden');
+            logEvent('DRUG_TEST_STARTED', 'TESTS');
+        }
+
+        function nextTestStep(step) {
+            // Hide current step
+            document.querySelectorAll('.test-step').forEach(el => el.classList.add('hidden'));
+            
+            // Show next step
+            if (step === 'seal') {
+                document.getElementById('sealStep').classList.remove('hidden');
+            } else if (step === 'sample') {
+                document.getElementById('sampleStep').classList.remove('hidden');
+            } else if (step === 'waiting') {
+                document.getElementById('waitingStep').classList.remove('hidden');
+            } else if (step === 'results') {
+                document.getElementById('resultsStep').classList.remove('hidden');
+            }
+            
+            logEvent('TEST_STEP_' + step.toUpperCase(), 'DRUG_TEST');
+        }
+
+        function completeDrugTest() {
+            // Award points
+            currentPoints += 15;
+            hasCompletedTest = true;
+            
+            // Update wallet view
+            updateWalletDisplay();
+            updateTestsView();
+            
+            // Close modal and switch to wallet
+            closeDrugTest();
+            showDashboardView('wallet');
+            
+            // Show roulette option after a moment
+            setTimeout(() => {
+                if (currentPoints >= 25) {
+                    document.getElementById('rouletteModal').classList.remove('hidden');
+                }
+            }, 1000);
+            
+            logEvent('DRUG_TEST_COMPLETED', 'TESTS');
+        }
+
+        function closeDrugTest() {
+            document.getElementById('drugTestModal').classList.add('hidden');
+            document.querySelectorAll('.test-step').forEach(el => el.classList.add('hidden'));
+            document.getElementById('videoCall').classList.remove('hidden');
+        }
+
+        function updateWalletDisplay() {
+            // Update points display
+            document.querySelectorAll('.points-display').forEach(el => {
+                el.textContent = currentPoints;
+            });
+            
+            // Update roulette button
+            updateRouletteButton();
+            
+            // Update recent activity if test completed
+            if (hasCompletedTest) {
+                const walletView = document.getElementById('wallet-view');
+                const activitySection = walletView.querySelector('.space-y-3');
+                activitySection.innerHTML = `
+                    <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                        <div class="flex items-center">
+                            <span class="text-xl mr-3">✅</span>
+                            <div>
+                                <p class="font-semibold text-sm">Drug Test Complete</p>
+                                <p class="text-xs text-gray-600">Just now</p>
+                            </div>
+                        </div>
+                        <span class="text-green-600 font-semibold">+15</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                        <div class="flex items-center">
+                            <span class="text-xl mr-3">✅</span>
+                            <div>
+                                <p class="font-semibold text-sm">Intake Complete</p>
+                                <p class="text-xs text-gray-600">Earlier today</p>
+                            </div>
+                        </div>
+                        <span class="text-green-600 font-semibold">+10</span>
+                    </div>
+                `;
+            }
+        }
+
+        function closeRoulette() {
+            document.getElementById('rouletteModal').classList.add('hidden');
+            // Reset roulette for next time
+            document.getElementById('rouletteWheel').style.transform = 'rotate(0deg)';
+            document.getElementById('rouletteWheel').style.transition = 'none';
+            document.getElementById('spinResult').classList.add('hidden');
+            document.getElementById('spinButton').classList.remove('hidden');
+            document.getElementById('spinButton').disabled = false;
+            document.getElementById('spinButton').textContent = '🎰 TAP TO SPIN! 🎰';
+        }
+
+        function updateTestsView() {
+            if (hasCompletedTest) {
+                const testsView = document.getElementById('tests-view');
+                const recentTests = testsView.querySelector('.space-y-3').innerHTML = `
+                    <h3 class="font-semibold">Recent Tests</h3>
+                    <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                        <div class="flex items-center">
+                            <span class="text-xl mr-3">✅</span>
+                            <div>
+                                <p class="font-semibold text-sm">Saliva Test - NEGATIVE</p>
+                                <p class="text-xs text-gray-600">Just completed</p>
+                            </div>
+                        </div>
+                        <span class="text-green-600 font-semibold">+15 pts</span>
+                    </div>
+                `;
+                
+                // Update the main test button
+                const testButton = testsView.querySelector('.bg-gradient-to-r');
+                testButton.innerHTML = `
+                    <h3 class="text-lg font-semibold mb-2">Great Job!</h3>
+                    <p class="mb-4">Next test available tomorrow</p>
+                    <button class="bg-white text-green-600 px-6 py-3 rounded-lg font-semibold opacity-50" disabled>
+                        🧪 Test Completed Today
+                    </button>
+                `;
+            }
+        }
+
+        // Roulette functions
+        function spinRoulette() {
+            const wheel = document.getElementById('rouletteWheel');
+            const button = document.getElementById('spinButton');
+            
+            // Disable button and start spinning
+            button.disabled = true;
+            button.textContent = '🎰 SPINNING... 🎰';
+            
+            // Add spinning animation
+            wheel.style.transform = 'rotate(1800deg)'; // 5 full rotations
+            wheel.style.transition = 'transform 3s ease-out';
+            
+            // Show result after spin
+            setTimeout(() => {
+                document.getElementById('spinResult').classList.remove('hidden');
+                button.classList.add('hidden');
+                currentPoints -= 25; // Deduct spin cost
+                logEvent('ROULETTE_WON_$30', 'WALLET');
+            }, 3000);
+            
+            logEvent('ROULETTE_SPIN', 'WALLET');
+        }
+
+        function checkRouletteEligibility() {
+            if (currentPoints >= 25) {
+                document.getElementById('rouletteModal').classList.remove('hidden');
+                logEvent('ROULETTE_OPENED', 'WALLET');
+            } else {
+                // Show helpful message
+                const button = document.getElementById('rouletteButton');
+                const originalText = button.textContent;
+                button.textContent = `Need ${25 - currentPoints} more points!`;
+                button.classList.add('bg-gray-300', 'text-gray-600');
+                button.classList.remove('bg-white', 'text-teal-600');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('bg-gray-300', 'text-gray-600');
+                    button.classList.add('bg-white', 'text-teal-600');
+                }, 2000);
+            }
+        }
+
+        // Update roulette button based on points
+        function updateRouletteButton() {
+            const button = document.getElementById('rouletteButton');
+            if (currentPoints >= 25) {
+                button.textContent = '🎰 Spin Roulette ($25)';
+                button.classList.remove('opacity-50');
+            } else {
+                button.textContent = `🎰 Need ${25 - currentPoints} more pts to spin`;
+                button.classList.add('opacity-50');
+            }
+        }
+        function checkEligibility() {
+            const input = document.getElementById('medicaidInput');
+            const result = document.getElementById('eligibilityResult');
+            
+            if (input.value.trim()) {
+                // Simulate API call delay
+                result.innerHTML = '<div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg"><p class="text-yellow-700">🔄 Checking eligibility...</p></div>';
+                result.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    // Mock successful result
+                    result.innerHTML = `
+                        <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-green-600">✅</span>
+                                <div class="text-sm">
+                                    <p class="font-semibold text-green-800">Eligible - Targeted Adult Medicaid</p>
+                                    <p class="text-green-600">Route: FFS Medicaid (H0038)</p>
+                                    <p class="text-green-600">County: Salt Lake | No PMHP enrollment</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    logEvent('MEDICAID_VERIFIED', 'INTAKE');
+                }, 1500);
+            }
+        }
 
         // Log page load
         window.addEventListener('load', function() {
