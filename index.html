@@ -104,19 +104,25 @@
             font-weight: bold;
             font-size: 0.875rem;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
-            transform-origin: center;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            top: 50%;
+            left: 50%;
         }
-        /* Position numbers around the wheel */
-        .roulette-number:nth-child(1) { top: 1rem; left: 50%; transform: translateX(-50%); }
-        .roulette-number:nth-child(2) { top: 1.5rem; right: 2.5rem; }
-        .roulette-number:nth-child(3) { top: 3rem; right: 1rem; }
-        .roulette-number:nth-child(4) { right: 1rem; top: 50%; transform: translateY(-50%); }
-        .roulette-number:nth-child(5) { bottom: 3rem; right: 1rem; }
-        .roulette-number:nth-child(6) { bottom: 1.5rem; right: 2.5rem; }
-        .roulette-number:nth-child(7) { bottom: 1rem; left: 50%; transform: translateX(-50%); }
-        .roulette-number:nth-child(8) { bottom: 1.5rem; left: 2.5rem; }
-        .roulette-number:nth-child(9) { bottom: 3rem; left: 1rem; }
-        .roulette-number:nth-child(10) { left: 1rem; top: 50%; transform: translateY(-50%); }
+        /* Position numbers at the center of each color section */
+        .roulette-number:nth-child(1) { transform: translate(-50%, -50%) rotate(18deg) translateY(-5rem) rotate(-18deg); }   /* $5 at 18° */
+        .roulette-number:nth-child(2) { transform: translate(-50%, -50%) rotate(54deg) translateY(-5rem) rotate(-54deg); }   /* $10 at 54° */
+        .roulette-number:nth-child(3) { transform: translate(-50%, -50%) rotate(90deg) translateY(-5rem) rotate(-90deg); }   /* $5 at 90° */
+        .roulette-number:nth-child(4) { transform: translate(-50%, -50%) rotate(126deg) translateY(-5rem) rotate(-126deg); } /* $15 at 126° */
+        .roulette-number:nth-child(5) { transform: translate(-50%, -50%) rotate(162deg) translateY(-5rem) rotate(-162deg); } /* $5 at 162° */
+        .roulette-number:nth-child(6) { transform: translate(-50%, -50%) rotate(198deg) translateY(-5rem) rotate(-198deg); } /* $10 at 198° */
+        .roulette-number:nth-child(7) { transform: translate(-50%, -50%) rotate(234deg) translateY(-5rem) rotate(-234deg); } /* $5 at 234° */
+        .roulette-number:nth-child(8) { transform: translate(-50%, -50%) rotate(270deg) translateY(-5rem) rotate(-270deg); } /* $25 at 270° */
+        .roulette-number:nth-child(9) { transform: translate(-50%, -50%) rotate(306deg) translateY(-5rem) rotate(-306deg); } /* $5 at 306° */
+        .roulette-number:nth-child(10) { transform: translate(-50%, -50%) rotate(342deg) translateY(-5rem) rotate(-342deg); } /* $30 at 342° */
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
@@ -1247,57 +1253,71 @@
             document.getElementById('spinButton').textContent = '🎰 Tap to spin now! 🎰';
         }
 
-        // Roulette spin function with proper probabilities and visual feedback
-        function spinRoulette() {
-            const wheel = document.getElementById('rouletteWheel');
-            const button = document.getElementById('spinButton');
-            
-            // Disable button and start spinning
-            button.disabled = true;
-            button.textContent = '🎰 SPINNING... 🎰';
-            
-            // Determine winning amount based on probabilities
-            const rand = Math.random();
-            let winAmount, finalRotation;
-            
-            if (rand < 0.15) {
-                // 15% chance: $30
-                winAmount = 30;
-                finalRotation = 1800 + 324; // Point to $30 section (324-360 degrees)
-            } else if (rand < 0.30) {
-                // 15% chance: $15-25
-                winAmount = Math.random() < 0.5 ? 15 : 25;
-                finalRotation = winAmount === 25 ? 1800 + 252 : 1800 + 108; // $25 or $15 sections
-            } else {
-                // 70% chance: $5-10
-                winAmount = Math.random() < 0.6 ? 5 : 10;
-                // Multiple $5 and $10 sections available
-                const fiveDollarAngles = [0, 72, 144, 216, 288];
-                const tenDollarAngles = [36, 180];
-                if (winAmount === 5) {
-                    const randomFive = fiveDollarAngles[Math.floor(Math.random() * fiveDollarAngles.length)];
-                    finalRotation = 1800 + randomFive;
-                } else {
-                    const randomTen = tenDollarAngles[Math.floor(Math.random() * tenDollarAngles.length)];
-                    finalRotation = 1800 + randomTen;
-                }
-            }
-            
-            // Add spinning animation
-            wheel.style.transform = `rotate(${finalRotation}deg)`;
-            
-            // Show result after spin
-            setTimeout(() => {
-                document.getElementById('winAmount').textContent = `YOU WON $${winAmount}!`;
-                document.getElementById('spinResult').classList.remove('hidden');
-                button.classList.add('hidden');
-                currentPoints -= 25; // Deduct spin cost
-                updateWalletDisplay(); // Update points display
-                logEvent(`ROULETTE_WON_$${winAmount}`, 'WALLET');
-            }, 3000);
-            
-            logEvent('ROULETTE_SPIN', 'WALLET');
-        }
+// Roulette spin function with proper probabilities and visual feedback
+function spinRoulette() {
+    const wheel = document.getElementById('rouletteWheel');
+    const button = document.getElementById('spinButton');
+    
+    // Disable button and start spinning
+    button.disabled = true;
+    button.textContent = '🎰 SPINNING... 🎰';
+    
+    // Define wheel sections with their center angles and prizes
+    const wheelSections = [
+        { angle: 18, prize: 5 },   // $5 section 1
+        { angle: 54, prize: 10 },  // $10 section 1
+        { angle: 90, prize: 5 },   // $5 section 2
+        { angle: 126, prize: 15 }, // $15 section
+        { angle: 162, prize: 5 },  // $5 section 3
+        { angle: 198, prize: 10 }, // $10 section 2
+        { angle: 234, prize: 5 },  // $5 section 4
+        { angle: 270, prize: 25 }, // $25 section
+        { angle: 306, prize: 5 },  // $5 section 5
+        { angle: 342, prize: 30 }  // $30 section
+    ];
+    
+    // Determine winning section based on probabilities
+    const rand = Math.random();
+    let winningSection;
+    
+    if (rand < 0.1) {
+        // 10% chance: $30
+        winningSection = wheelSections[9]; // $30 section
+    } else if (rand < 0.2) {
+        // 10% chance: $25
+        winningSection = wheelSections[7]; // $25 section
+    } else if (rand < 0.3) {
+        // 10% chance: $15
+        winningSection = wheelSections[3]; // $15 section
+    } else if (rand < 0.5) {
+        // 20% chance: $10
+        const tenSections = [wheelSections[1], wheelSections[5]]; // $10 sections
+        winningSection = tenSections[Math.floor(Math.random() * tenSections.length)];
+    } else {
+        // 50% chance: $5
+        const fiveSections = [wheelSections[0], wheelSections[2], wheelSections[4], wheelSections[6], wheelSections[8]]; // $5 sections
+        winningSection = fiveSections[Math.floor(Math.random() * fiveSections.length)];
+    }
+    
+    // Calculate final rotation (multiple spins + landing on winning section)
+    // Pointer is at top (0°), so we need to account for that
+    const finalRotation = 1800 + (360 - winningSection.angle); // 5 full rotations + position
+    
+    // Add spinning animation
+    wheel.style.transform = `rotate(${finalRotation}deg)`;
+    
+    // Show result after spin
+    setTimeout(() => {
+        document.getElementById('winAmount').textContent = `YOU WON $${winningSection.prize}!`;
+        document.getElementById('spinResult').classList.remove('hidden');
+        button.classList.add('hidden');
+        currentPoints -= 25; // Deduct spin cost
+        updateWalletDisplay(); // Update points display
+        logEvent(`ROULETTE_WON_$${winningSection.prize}`, 'WALLET');
+    }, 3000);
+    
+    logEvent('ROULETTE_SPIN', 'WALLET');
+}
 
         function checkEligibility() {
             const input = document.getElementById('medicaidInput');
