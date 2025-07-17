@@ -63,6 +63,16 @@
         .roulette-spin {
             transition: transform 3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
+        .tour-modal {
+            animation: tourSlideIn 0.3s ease-out;
+        }
+        @keyframes tourSlideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .tour-spotlight {
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
@@ -132,7 +142,7 @@
             </button>
         </section>
 
-        <!-- Success + Video Explainer Screen -->
+        <!-- Success + Interactive Tour Screen -->
         <section id="success" class="screen p-6 h-screen flex flex-col">
             <div class="text-center mb-6">
                 <div class="text-6xl mb-4">🎉</div>
@@ -143,19 +153,20 @@
                 <p class="text-sm text-gray-600">Points = $1 each in rewards roulette</p>
             </div>
             
-            <!-- Video placeholder -->
-            <div class="flex-1 mb-6">
-                <div class="bg-gray-900 rounded-lg p-8 text-center text-white h-48 flex items-center justify-center">
-                    <div>
-                        <div class="text-4xl mb-2">▶️</div>
-                        <p class="text-sm">Video: How REACH 2.0 Works</p>
-                        <p class="text-xs opacity-75 mt-1">(Replace with embedded video)</p>
-                    </div>
+            <!-- Interactive Tour Launch -->
+            <div class="flex-1 mb-6 flex flex-col justify-center">
+                <div class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-6 text-white text-center">
+                    <div class="text-4xl mb-3">🎯</div>
+                    <h3 class="text-lg font-bold mb-2">Ready to explore Moonlit?</h3>
+                    <p class="text-sm mb-4 opacity-90">Take a quick interactive tour to see how you can earn rewards and stay connected with your care team</p>
+                    <button onclick="startGuidedTour()" class="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                        🚀 Start Interactive Tour
+                    </button>
                 </div>
             </div>
             
             <button onclick="navigateTo('wallet')" class="w-full bg-teal-500 text-white py-4 px-6 rounded-xl text-lg font-semibold hover:bg-teal-600 transition-colors">
-                See My Wallet
+                Skip Tour - See My Wallet
             </button>
         </section>
 
@@ -404,8 +415,8 @@
                             <span class="text-3xl font-bold points-display">10</span>
                         </div>
                         <div class="text-center">
-                            <button onclick="checkRouletteEligibility()" id="rouletteButton" class="bg-white text-teal-600 px-6 py-2 rounded-full font-semibold">
-                                🎰 Need 25 pts to spin
+                            <button id="rouletteButton" class="bg-gray-300 text-gray-600 px-6 py-2 rounded-full font-semibold opacity-75 cursor-not-allowed">
+                                🔒 Earn 15 more points to unlock spin
                             </button>
                         </div>
                     </div>
@@ -490,6 +501,34 @@
             </div>
         </section>
 
+    </div>
+
+    <!-- Guided Tour Overlay -->
+    <div id="tourOverlay" class="fixed inset-0 bg-black bg-opacity-70 hidden z-50">
+        <!-- Tour Spotlight -->
+        <div id="tourSpotlight" class="absolute bg-white bg-opacity-20 rounded-lg border-4 border-white shadow-2xl transition-all duration-500"></div>
+        
+        <!-- Tour Modal -->
+        <div id="tourModal" class="absolute bg-white rounded-xl p-6 shadow-2xl w-80 max-w-[90vw] tour-modal">
+            <div id="tourContent">
+                <!-- Dynamic content loaded here -->
+            </div>
+            
+            <div class="flex justify-between items-center mt-6">
+                <div id="tourProgress" class="flex space-x-2">
+                    <!-- Progress dots -->
+                </div>
+                
+                <div class="space-x-3">
+                    <button onclick="skipTour()" class="text-gray-500 px-3 py-2 rounded-lg hover:bg-gray-100 text-sm">
+                        Skip
+                    </button>
+                    <button onclick="nextTourStep()" id="tourNextBtn" class="bg-teal-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-teal-600 text-sm">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Drug Test Simulation Modal -->
@@ -659,32 +698,49 @@
             
             <div class="relative mb-8">
                 <!-- Roulette Wheel -->
-                <div id="rouletteWheel" class="w-64 h-64 mx-auto rounded-full border-8 border-gray-300 relative overflow-hidden" style="background: conic-gradient(from 0deg, #ef4444 0deg 60deg, #22c55e 60deg 120deg, #3b82f6 120deg 180deg, #f59e0b 180deg 240deg, #8b5cf6 240deg 300deg, #ec4899 300deg 360deg);">
-                    <!-- Wheel sections with values -->
+                <div id="rouletteWheel" class="w-64 h-64 mx-auto rounded-full border-8 border-gray-300 relative overflow-hidden" style="background: conic-gradient(from 0deg, 
+                    #ef4444 0deg 36deg,     /* $5 - 10% */
+                    #22c55e 36deg 72deg,    /* $10 - 10% */ 
+                    #3b82f6 72deg 108deg,   /* $15 - 10% */
+                    #f59e0b 108deg 144deg,  /* $5 - 10% */
+                    #8b5cf6 144deg 180deg,  /* $10 - 10% */
+                    #ec4899 180deg 216deg,  /* $15 - 10% */
+                    #10b981 216deg 252deg,  /* $25 - 10% */
+                    #ef4444 252deg 288deg,  /* $5 - 10% */
+                    #22c55e 288deg 324deg,  /* $10 - 10% */
+                    #6366f1 324deg 360deg   /* $30 - 10% */
+                );">
+                    <!-- Center dot -->
                     <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="w-4 h-4 bg-white rounded-full"></div>
-                    </div>
-                    <!-- Pointer -->
-                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1">
-                        <div class="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-gray-800"></div>
+                        <div class="w-4 h-4 bg-white rounded-full z-10"></div>
                     </div>
                 </div>
                 
-                <!-- Values around wheel -->
-                <div class="absolute inset-0 flex items-center justify-center">
+                <!-- Pointer -->
+                <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1 z-20">
+                    <div class="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-gray-800"></div>
+                </div>
+                
+                <!-- Spinning Numbers -->
+                <div id="wheelNumbers" class="absolute inset-0 flex items-center justify-center">
                     <div class="relative w-64 h-64">
-                        <div class="absolute top-4 left-1/2 transform -translate-x-1/2 text-white font-bold">$10</div>
-                        <div class="absolute top-12 right-8 text-white font-bold">$30</div>
-                        <div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-white font-bold">$5</div>
-                        <div class="absolute bottom-12 right-8 text-white font-bold">$20</div>
-                        <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white font-bold">$15</div>
-                        <div class="absolute bottom-12 left-8 text-white font-bold">$25</div>
+                        <!-- Numbers positioned around wheel -->
+                        <div class="absolute top-6 left-1/2 transform -translate-x-1/2 text-white font-bold text-sm">$5</div>
+                        <div class="absolute top-12 right-12 text-white font-bold text-sm">$10</div>
+                        <div class="absolute top-20 right-6 text-white font-bold text-sm">$15</div>
+                        <div class="absolute right-6 top-1/2 transform -translate-y-1/2 text-white font-bold text-sm">$5</div>
+                        <div class="absolute bottom-20 right-6 text-white font-bold text-sm">$10</div>
+                        <div class="absolute bottom-12 right-12 text-white font-bold text-sm">$15</div>
+                        <div class="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-white font-bold text-sm">$25</div>
+                        <div class="absolute bottom-12 left-12 text-white font-bold text-sm">$5</div>
+                        <div class="absolute bottom-20 left-6 text-white font-bold text-sm">$10</div>
+                        <div class="absolute left-6 top-1/2 transform -translate-y-1/2 text-white font-bold text-sm">$30</div>
                     </div>
                 </div>
             </div>
             
             <button onclick="spinRoulette()" id="spinButton" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl text-lg font-bold">
-                🎰 TAP TO SPIN! 🎰
+                🎰 Tap to spin now! 🎰
             </button>
             
             <div id="spinResult" class="hidden mt-6 text-center">
@@ -701,6 +757,189 @@
     <script>
         let currentPoints = 10; // Starting points from intake
         let hasCompletedTest = false;
+        let currentTourStep = 0;
+
+        // Guided Tour Steps
+        const tourSteps = [
+            {
+                title: "Welcome to Moonlit! 🌙",
+                content: "You've earned your first 10 points! In Moonlit, everything you do earns points that turn into real cash rewards. Let's explore how it works.",
+                target: null,
+                position: "center",
+                action: "highlight-points"
+            },
+            {
+                title: "Drug Testing Made Easy 🧪",
+                content: "Tap the Tests tab to see how our guided drug testing works. Your CPSS will walk you through every step via video call.",
+                target: "button[onclick=\"showDashboardView('tests')\"]",
+                position: "top",
+                action: "show-dashboard"
+            },
+            {
+                title: "Complete Your First Test 📱",
+                content: "This is where you'll do guided saliva tests with your care team. Each negative test earns 15 points - let's try it!",
+                target: "button[onclick=\"startDrugTest()\"]",
+                position: "bottom",
+                action: "start-test"
+            },
+            {
+                title: "Your Reward Wallet 💰",
+                content: "Great! You now have 25 points total. Your wallet tracks all your achievements and lets you spend points on real rewards.",
+                target: "button[onclick=\"showDashboardView('wallet')\"]",
+                position: "top",
+                action: "show-wallet"
+            },
+            {
+                title: "Spin the Roulette! 🎰",
+                content: "You have enough points to spin! Our rewards roulette gives you cash prizes. Each spin costs 25 points but can win up to $50!",
+                target: "#rouletteButton",
+                position: "top",
+                action: "spin-roulette"
+            },
+            {
+                title: "Your Care Team 👥",
+                content: "Your Team tab connects you with your CPSS and MSW. They're here to support you every step of your recovery journey.",
+                target: "button[onclick=\"showDashboardView('team')\"]",
+                position: "top",
+                action: "show-team"
+            },
+            {
+                title: "You're All Set! 🎉",
+                content: "You've completed the Moonlit tour! You now know how to earn points, complete tests, win rewards, and connect with your care team. Ready to start your recovery journey?",
+                target: null,
+                position: "center",
+                action: "complete"
+            }
+        ];
+
+        // Guided Tour Functions
+        function startGuidedTour() {
+            currentTourStep = 0;
+            document.getElementById('tourOverlay').classList.remove('hidden');
+            navigateTo('dashboard'); // Move to dashboard for tour
+            setTimeout(() => {
+                showTourStep(0);
+            }, 500);
+            logEvent('GUIDED_TOUR_STARTED', 'SUCCESS');
+        }
+
+        function showTourStep(stepIndex) {
+            const step = tourSteps[stepIndex];
+            const tourContent = document.getElementById('tourContent');
+            const tourModal = document.getElementById('tourModal');
+            const tourSpotlight = document.getElementById('tourSpotlight');
+            const nextBtn = document.getElementById('tourNextBtn');
+
+            // Update content
+            tourContent.innerHTML = `
+                <h3 class="text-xl font-bold text-gray-800 mb-3">${step.title}</h3>
+                <p class="text-gray-600">${step.content}</p>
+            `;
+
+            // Update progress dots
+            updateTourProgress(stepIndex);
+
+            // Update next button
+            nextBtn.textContent = stepIndex === tourSteps.length - 1 ? 'Finish' : 'Next';
+
+            // Position modal and spotlight
+            if (step.target) {
+                const targetElement = document.querySelector(step.target);
+                if (targetElement) {
+                    const rect = targetElement.getBoundingClientRect();
+                    
+                    // Position spotlight
+                    tourSpotlight.style.left = (rect.left - 10) + 'px';
+                    tourSpotlight.style.top = (rect.top - 10) + 'px';
+                    tourSpotlight.style.width = (rect.width + 20) + 'px';
+                    tourSpotlight.style.height = (rect.height + 20) + 'px';
+                    tourSpotlight.classList.remove('hidden');
+                    
+                    // Position modal
+                    if (step.position === 'top') {
+                        tourModal.style.left = Math.max(20, Math.min(window.innerWidth - 340, rect.left - 100)) + 'px';
+                        tourModal.style.top = Math.max(20, rect.top - 220) + 'px';
+                        tourModal.style.transform = 'none';
+                    } else if (step.position === 'bottom') {
+                        tourModal.style.left = Math.max(20, Math.min(window.innerWidth - 340, rect.left - 100)) + 'px';
+                        tourModal.style.top = Math.min(window.innerHeight - 250, rect.bottom + 20) + 'px';
+                        tourModal.style.transform = 'none';
+                    }
+                } else {
+                    tourSpotlight.classList.add('hidden');
+                }
+            } else {
+                // Center modal for steps without targets
+                tourSpotlight.classList.add('hidden');
+                tourModal.style.left = '50%';
+                tourModal.style.top = '50%';
+                tourModal.style.transform = 'translate(-50%, -50%)';
+            }
+
+            // Execute step action
+            executeStepAction(step.action);
+        }
+
+        function executeStepAction(action) {
+            switch(action) {
+                case 'show-dashboard':
+                    // Already on dashboard
+                    break;
+                case 'start-test':
+                    showDashboardView('tests');
+                    break;
+                case 'show-wallet':
+                    // Simulate completing test
+                    if (!hasCompletedTest) {
+                        currentPoints += 15;
+                        hasCompletedTest = true;
+                        updateWalletDisplay();
+                        updateTestsView();
+                    }
+                    showDashboardView('wallet');
+                    break;
+                case 'spin-roulette':
+                    // Will be handled by user click
+                    break;
+                case 'show-team':
+                    showDashboardView('team');
+                    break;
+                case 'complete':
+                    // Tour completion
+                    break;
+            }
+        }
+
+        function updateTourProgress(currentStep) {
+            const progressContainer = document.getElementById('tourProgress');
+            const dots = tourSteps.map((_, index) => {
+                const active = index <= currentStep ? 'bg-teal-500' : 'bg-gray-300';
+                return `<div class="w-3 h-3 rounded-full ${active}"></div>`;
+            }).join('');
+            progressContainer.innerHTML = dots;
+        }
+
+        function nextTourStep() {
+            if (currentTourStep < tourSteps.length - 1) {
+                currentTourStep++;
+                showTourStep(currentTourStep);
+                logEvent('TOUR_STEP_' + currentTourStep, 'GUIDED_TOUR');
+            } else {
+                completeTour();
+            }
+        }
+
+        function skipTour() {
+            completeTour();
+            logEvent('TOUR_SKIPPED', 'GUIDED_TOUR');
+        }
+
+        function completeTour() {
+            document.getElementById('tourOverlay').classList.add('hidden');
+            // Ensure they're on a good ending screen
+            showDashboardView('wallet');
+            logEvent('TOUR_COMPLETED', 'GUIDED_TOUR');
+        }
         // Analytics function
         function logEvent(action, screen) {
             console.log(`[REACH Analytics] ${action} - Screen: ${screen} - Time: ${new Date().toISOString()}`);
@@ -843,6 +1082,33 @@
             document.getElementById('videoCall').classList.remove('hidden');
         }
 
+        // Update roulette button based on points
+        function updateRouletteButton() {
+            const button = document.getElementById('rouletteButton');
+            if (currentPoints >= 25) {
+                button.textContent = '🎉 You\'ve earned enough points to spin!';
+                button.onclick = function() { 
+                    document.getElementById('rouletteModal').classList.remove('hidden');
+                    logEvent('ROULETTE_OPENED', 'WALLET');
+                };
+                button.classList.remove('bg-gray-300', 'text-gray-600', 'opacity-75', 'cursor-not-allowed');
+                button.classList.add('bg-white', 'text-teal-600', 'hover:bg-gray-100', 'cursor-pointer');
+            } else {
+                const needed = 25 - currentPoints;
+                button.textContent = `🔒 Earn ${needed} more points to unlock spin`;
+                button.onclick = function() {
+                    // Show helpful message
+                    const originalText = button.textContent;
+                    button.textContent = `Keep going! ${needed} more points needed!`;
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                    }, 2000);
+                };
+                button.classList.remove('bg-white', 'text-teal-600', 'hover:bg-gray-100', 'cursor-pointer');
+                button.classList.add('bg-gray-300', 'text-gray-600', 'opacity-75', 'cursor-not-allowed');
+            }
+        }
+
         function updateWalletDisplay() {
             // Update points display
             document.querySelectorAll('.points-display').forEach(el => {
@@ -889,7 +1155,7 @@
             document.getElementById('spinResult').classList.add('hidden');
             document.getElementById('spinButton').classList.remove('hidden');
             document.getElementById('spinButton').disabled = false;
-            document.getElementById('spinButton').textContent = '🎰 TAP TO SPIN! 🎰';
+            document.getElementById('spinButton').textContent = '🎰 Tap to spin now! 🎰';
         }
 
         function updateTestsView() {
@@ -969,11 +1235,26 @@
         function updateRouletteButton() {
             const button = document.getElementById('rouletteButton');
             if (currentPoints >= 25) {
-                button.textContent = '🎰 Spin Roulette ($25)';
-                button.classList.remove('opacity-50');
+                button.textContent = '🎉 You\'ve earned enough points to spin!';
+                button.onclick = function() { 
+                    document.getElementById('rouletteModal').classList.remove('hidden');
+                    logEvent('ROULETTE_OPENED', 'WALLET');
+                };
+                button.classList.remove('bg-gray-300', 'text-gray-600', 'opacity-75', 'cursor-not-allowed');
+                button.classList.add('bg-white', 'text-teal-600', 'hover:bg-gray-100', 'cursor-pointer');
             } else {
-                button.textContent = `🎰 Need ${25 - currentPoints} more pts to spin`;
-                button.classList.add('opacity-50');
+                const needed = 25 - currentPoints;
+                button.textContent = `🔒 Earn ${needed} more points to unlock spin`;
+                button.onclick = function() {
+                    // Show helpful message
+                    const originalText = button.textContent;
+                    button.textContent = `Keep going! ${needed} more points needed!`;
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                    }, 2000);
+                };
+                button.classList.remove('bg-white', 'text-teal-600', 'hover:bg-gray-100', 'cursor-pointer');
+                button.classList.add('bg-gray-300', 'text-gray-600', 'opacity-75', 'cursor-not-allowed');
             }
         }
         function checkEligibility() {
@@ -1007,6 +1288,10 @@
         // Log page load
         window.addEventListener('load', function() {
             logEvent('PAGE_LOAD', 'WELCOME');
+            // Initialize roulette button
+            setTimeout(() => {
+                updateRouletteButton();
+            }, 1000);
         });
     </script>
 </body>
